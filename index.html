@@ -704,7 +704,7 @@ a:active { opacity: 0.7; }
 .hood-card-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(15,10,8,0.92) 0%, rgba(15,10,8,0.5) 50%, rgba(15,10,8,0.15) 100%);
+  background: linear-gradient(to top, rgba(15,10,8,0.95) 0%, rgba(15,10,8,0.75) 55%, rgba(15,10,8,0.35) 100%);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -1540,13 +1540,7 @@ function getNeighborhoodCounts() {
 
 function showVibeMenu() {
   const el = document.getElementById('explore-content');
-  let html = '<div class="section-title">Explore by Vibe</div><div class="vibe-grid">';
-  VIBES.forEach((v, i) => {
-    html += `<div class="vibe-card" data-vibe="${v.vibe}" onclick="showVibeResults(${i})"><span class="vibe-icon">${v.icon}</span><span class="vibe-label">${v.label}</span></div>`;
-  });
-  html += '</div>';
-
-  // Neighborhood section
+  // Neighborhood section first
   const hoodCounts = getNeighborhoodCounts();
   const HOOD_INFO = {
     'French Quarter': {
@@ -1604,7 +1598,7 @@ function showVibeMenu() {
   };
   const hoodOrder = ['French Quarter', 'Faubourg Marigny', 'Bywater', 'Trem\u00e9 / Mid-City', 'CBD / Warehouse', 'Lower Garden District', 'Garden District', 'Upper Magazine', 'Uptown', 'Carrollton / Riverbend', 'Freret', 'Central City', 'River Road Plantations', 'Other'];
 
-  html += '<div class="section-title" style="margin-top:36px;">Explore by Neighborhood</div><div class="hood-grid">';
+  let html = '<div class="section-title">Neighborhoods</div><div class="hood-grid">';
   hoodOrder.forEach(h => {
     if (!hoodCounts[h]) return;
     const info = HOOD_INFO[h] || {};
@@ -1617,6 +1611,13 @@ function showVibeMenu() {
         <div class="hood-card-count">${hoodCounts[h]} places</div>
       </div>
     </div>`;
+  });
+  html += '</div>';
+
+  // Vibe section
+  html += '<div class="section-title" style="margin-top:36px;">Explore by Vibe</div><div class="vibe-grid">';
+  VIBES.forEach((v, i) => {
+    html += `<div class="vibe-card" data-vibe="${v.vibe}" onclick="showVibeResults(${i})"><span class="vibe-icon">${v.icon}</span><span class="vibe-label">${v.label}</span></div>`;
   });
   html += '</div>';
 
