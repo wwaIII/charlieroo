@@ -683,31 +683,57 @@ a:active { opacity: 0.7; }
 .hood-grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 .hood-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--card);
-  border-radius: 10px;
-  padding: 14px 16px;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: all 0.2s var(--ease-out);
+  min-height: 120px;
 }
-.hood-card:active { transform: scale(0.98); background: var(--card-elevated); }
-.hood-card-icon { font-size: 22px; flex-shrink: 0; }
-.hood-card-info { display: flex; flex-direction: column; gap: 2px; }
+.hood-card:active { transform: scale(0.98); }
+.hood-card-img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+.hood-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(15,10,8,0.92) 0%, rgba(15,10,8,0.5) 50%, rgba(15,10,8,0.15) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 14px 16px;
+}
 .hood-card-name {
   font-family: var(--font-heading);
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
   color: var(--text);
+  line-height: 1.2;
+}
+.hood-card-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-top: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .hood-card-count {
-  font-size: 11px;
+  font-size: 10px;
+  font-weight: 500;
   color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 6px;
 }
 
 .explore-back {
@@ -1522,25 +1548,73 @@ function showVibeMenu() {
 
   // Neighborhood section
   const hoodCounts = getNeighborhoodCounts();
-  const hoodOrder = ['French Quarter', 'Faubourg Marigny', 'Bywater', 'Tremé / Mid-City', 'CBD / Warehouse', 'Lower Garden District', 'Garden District', 'Upper Magazine', 'Uptown', 'Carrollton / Riverbend', 'Freret', 'Central City', 'River Road Plantations', 'Other'];
-  const hoodIcons = {
-    'French Quarter': '\u269C', 'Faubourg Marigny': '\uD83C\uDFB7', 'Bywater': '\uD83C\uDFA8',
-    'Tremé / Mid-City': '\uD83C\uDFBA', 'CBD / Warehouse': '\uD83C\uDFD9\uFE0F', 'Lower Garden District': '\uD83C\uDF3A',
-    'Garden District': '\uD83C\uDF33', 'Upper Magazine': '\uD83D\uDECD\uFE0F', 'Uptown': '\uD83C\uDF43',
-    'Carrollton / Riverbend': '\uD83C\uDF0A', 'Freret': '\uD83C\uDF7A', 'Central City': '\uD83C\uDFD8\uFE0F',
-    'River Road Plantations': '\uD83C\uDFDB\uFE0F', 'Other': '\uD83D\uDCCD'
+  const HOOD_INFO = {
+    'French Quarter': {
+      desc: "The oldest neighborhood — wrought-iron balconies, jazz in every doorway, and the kind of controlled chaos that never gets old.",
+      photo: "photos/hood_French Quarter.jpg"
+    },
+    'Faubourg Marigny': {
+      desc: "Where you go for the music without the frat party. Frenchmen Street is the real deal — live jazz, colorful Creole cottages, and locals who actually show up.",
+      photo: "photos/hood_Faubourg Marigny.jpg"
+    },
+    'Bywater': {
+      desc: "Marigny's artsy, weirder cousin. Murals on every wall, bikes everywhere, and that raw DIY energy. Your Airbnb is right here.",
+      photo: "photos/hood_Bywater.jpg"
+    },
+    'Trem\u00e9 / Mid-City': {
+      desc: "The oldest Black neighborhood in America and the birthplace of jazz. Congo Square, second line culture, Bayou St. John for a slow afternoon.",
+      photo: "photos/hood_Trem\u00e9  Mid-City.jpg"
+    },
+    'CBD / Warehouse': {
+      desc: "Old industrial buildings turned world-class museums and restaurants. The WWII Museum alone is worth the trip, and Julia Street's gallery row is legit.",
+      photo: "photos/hood_CBD  Warehouse.jpg"
+    },
+    'Lower Garden District': {
+      desc: "A little grittier than its upriver neighbors — neoclassical bones and a street-art soul. Magazine Street runs through with the best local shops and eats.",
+      photo: "photos/hood_Lower Garden District.jpg"
+    },
+    'Garden District': {
+      desc: "The postcard version of New Orleans. Massive antebellum mansions behind ancient live oaks dripping with Spanish moss. Anne Rice lived here. It's stunning.",
+      photo: "photos/hood_Garden District.jpg"
+    },
+    'Upper Magazine': {
+      desc: "A six-mile string of independently owned shops, restaurants, and bars. No mall energy — just local boutiques, vintage spots, and neighborhood joints with regulars.",
+      photo: "photos/hood_Upper Magazine.jpg"
+    },
+    'Uptown': {
+      desc: "Grand oaks lining St. Charles Ave, the streetcar rolling by, and Audubon Park when you need to breathe. Less touristy, more how people actually live here.",
+      photo: "photos/hood_Uptown.jpg"
+    },
+    'Carrollton / Riverbend': {
+      desc: "Where the streetcar turns and things slow down. Small-town-within-a-city feel — good coffee, Camellia Grill for diner classics, Oak Street for a chill night.",
+      photo: "photos/hood_Carrollton  Riverbend.jpg"
+    },
+    'Freret': {
+      desc: "The comeback kid. Locals rebuilt it block by block post-Katrina into one of the best eating and drinking strips in the city. Cure alone makes it worth the trip.",
+      photo: "photos/hood_Freret.jpg"
+    },
+    'Central City': {
+      desc: "Doesn't always make the tourist map but should. Home to essential second line culture and Dooky Chase's — Leah Chase's legendary restaurant.",
+      photo: "photos/hood_Central City.jpg"
+    },
+    'River Road Plantations': {
+      desc: "A day trip along the Mississippi. Oak Alley's famous oak canopy is the photo, but Whitney Plantation tells the full story by centering the enslaved people who built it all.",
+      photo: "photos/hood_River Road Plantations.jpg"
+    }
   };
+  const hoodOrder = ['French Quarter', 'Faubourg Marigny', 'Bywater', 'Trem\u00e9 / Mid-City', 'CBD / Warehouse', 'Lower Garden District', 'Garden District', 'Upper Magazine', 'Uptown', 'Carrollton / Riverbend', 'Freret', 'Central City', 'River Road Plantations', 'Other'];
 
   html += '<div class="section-title" style="margin-top:36px;">Explore by Neighborhood</div><div class="hood-grid">';
   hoodOrder.forEach(h => {
     if (!hoodCounts[h]) return;
+    const info = HOOD_INFO[h] || {};
     const color = HOOD_COLORS[h] || '#5a5550';
-    const icon = hoodIcons[h] || '\uD83D\uDCCD';
-    html += `<div class="hood-card" onclick="showHoodResults('${h.replace(/'/g, "\\'")}')" style="border-left: 3px solid ${color};">
-      <span class="hood-card-icon">${icon}</span>
-      <div class="hood-card-info">
-        <span class="hood-card-name">${h}</span>
-        <span class="hood-card-count">${hoodCounts[h]} places</span>
+    html += `<div class="hood-card" onclick="showHoodResults('${h.replace(/'/g, "\\'")}')">
+      ${info.photo ? `<img class="hood-card-img" src="${info.photo}" alt="${h}" loading="lazy" onerror="this.style.display='none'">` : '<div style="height:120px;background:var(--card);"></div>'}
+      <div class="hood-card-overlay">
+        <div class="hood-card-name" style="color:${color};">${h}</div>
+        ${info.desc ? `<div class="hood-card-desc">${info.desc}</div>` : ''}
+        <div class="hood-card-count">${hoodCounts[h]} places</div>
       </div>
     </div>`;
   });
