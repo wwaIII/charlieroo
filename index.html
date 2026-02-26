@@ -679,6 +679,37 @@ a:active { opacity: 0.7; }
   color: var(--text);
 }
 
+/* Neighborhood grid */
+.hood-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hood-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border-radius: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s var(--ease-out);
+}
+.hood-card:active { transform: scale(0.98); background: var(--card-elevated); }
+.hood-card-icon { font-size: 22px; flex-shrink: 0; }
+.hood-card-info { display: flex; flex-direction: column; gap: 2px; }
+.hood-card-name {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.hood-card-count {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 .explore-back {
   display: inline-flex;
   align-items: center;
@@ -1472,6 +1503,15 @@ function buildExplore() {
   showVibeMenu();
 }
 
+function getNeighborhoodCounts() {
+  const counts = {};
+  PLACES.forEach(p => {
+    if (!counts[p.neighborhood]) counts[p.neighborhood] = 0;
+    counts[p.neighborhood]++;
+  });
+  return counts;
+}
+
 function showVibeMenu() {
   const el = document.getElementById('explore-content');
   let html = '<div class="section-title">Explore by Vibe</div><div class="vibe-grid">';
@@ -1479,6 +1519,33 @@ function showVibeMenu() {
     html += `<div class="vibe-card" data-vibe="${v.vibe}" onclick="showVibeResults(${i})"><span class="vibe-icon">${v.icon}</span><span class="vibe-label">${v.label}</span></div>`;
   });
   html += '</div>';
+
+  // Neighborhood section
+  const hoodCounts = getNeighborhoodCounts();
+  const hoodOrder = ['French Quarter', 'Faubourg Marigny', 'Bywater', 'Tremé / Mid-City', 'CBD / Warehouse', 'Lower Garden District', 'Garden District', 'Upper Magazine', 'Uptown', 'Carrollton / Riverbend', 'Freret', 'Central City', 'River Road Plantations', 'Other'];
+  const hoodIcons = {
+    'French Quarter': '\u269C', 'Faubourg Marigny': '\uD83C\uDFB7', 'Bywater': '\uD83C\uDFA8',
+    'Tremé / Mid-City': '\uD83C\uDFBA', 'CBD / Warehouse': '\uD83C\uDFD9\uFE0F', 'Lower Garden District': '\uD83C\uDF3A',
+    'Garden District': '\uD83C\uDF33', 'Upper Magazine': '\uD83D\uDECD\uFE0F', 'Uptown': '\uD83C\uDF43',
+    'Carrollton / Riverbend': '\uD83C\uDF0A', 'Freret': '\uD83C\uDF7A', 'Central City': '\uD83C\uDFD8\uFE0F',
+    'River Road Plantations': '\uD83C\uDFDB\uFE0F', 'Other': '\uD83D\uDCCD'
+  };
+
+  html += '<div class="section-title" style="margin-top:36px;">Explore by Neighborhood</div><div class="hood-grid">';
+  hoodOrder.forEach(h => {
+    if (!hoodCounts[h]) return;
+    const color = HOOD_COLORS[h] || '#5a5550';
+    const icon = hoodIcons[h] || '\uD83D\uDCCD';
+    html += `<div class="hood-card" onclick="showHoodResults('${h.replace(/'/g, "\\'")}')" style="border-left: 3px solid ${color};">
+      <span class="hood-card-icon">${icon}</span>
+      <div class="hood-card-info">
+        <span class="hood-card-name">${h}</span>
+        <span class="hood-card-count">${hoodCounts[h]} places</span>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+
   el.innerHTML = html;
 }
 
@@ -1507,6 +1574,40 @@ function showVibeResults(idx) {
           <div class="place-meta">
             ${p.rating ? `<span class="place-stars">${starsHTML(p.rating)}</span>` : ''}
             <span class="place-hood" style="background:${color};">${p.neighborhood}</span>
+            <span class="place-dist">${distLabel(p.lat, p.lng)}</span>
+          </div>
+        </div>
+      </div>`;
+  });
+  el.innerHTML = html;
+  document.getElementById('sec-explore').scrollTop = 0;
+}
+
+function showHoodResults(hood) {
+  let matches = PLACES.filter(p => p.neighborhood === hood);
+  matches.sort((a, b) => {
+    const da = (a.lat && a.lng) ? haversine(AIRBNB.lat, AIRBNB.lng, a.lat, a.lng) : 999;
+    const db = (b.lat && b.lng) ? haversine(AIRBNB.lat, AIRBNB.lng, b.lat, b.lng) : 999;
+    return da - db;
+  });
+
+  const color = HOOD_COLORS[hood] || '#5a5550';
+  const el = document.getElementById('explore-content');
+  let html = `<button class="explore-back" onclick="showVibeMenu()">\u2190 Back</button>`;
+  html += `<div class="explore-results-title" style="color:${color};">${hood}</div>`;
+  html += `<div style="font-size:12px;color:var(--text-muted);margin-bottom:20px;">${matches.length} places</div>`;
+
+  matches.forEach(p => {
+    const photo = PHOTOS[p.name];
+    const catColor = HOOD_COLORS[p.neighborhood] || '#5a5550';
+    html += `
+      <div class="place-card">
+        ${photo ? `<img class="place-photo" src="${photo}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'">` : ''}
+        <div class="place-body" style="border-left-color: ${catColor};">
+          <div class="place-name"><a href="${mapsUrl(p.address)}" target="_blank" rel="noopener">${p.name}</a></div>
+          <div class="place-meta">
+            ${p.rating ? `<span class="place-stars">${starsHTML(p.rating)}</span>` : ''}
+            <span class="place-hood" style="background:${catColor};">${p.category}</span>
             <span class="place-dist">${distLabel(p.lat, p.lng)}</span>
           </div>
         </div>
